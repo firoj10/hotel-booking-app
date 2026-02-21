@@ -1,4 +1,4 @@
-"use client";
+
 
 import SearchForm from "@/components/forms/SearchForm";
 

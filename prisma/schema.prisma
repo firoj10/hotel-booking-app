@@ -1,0 +1,214 @@
+// ===============================
+// GENERATOR & DATASOURCE
+// ===============================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ===============================
+// ENUMS (Industry Standard)
+// ===============================
+
+enum UserRole {
+  guest
+  admin
+  manager
+}
+
+enum RoomStatus {
+  available
+  maintenance
+  inactive
+}
+
+enum BookingStatus {
+  pending
+  confirmed
+  cancelled
+  completed
+}
+
+enum PaymentStatus {
+  pending
+  paid
+  refunded
+}
+
+enum PaymentMethod {
+  stripe
+  paypal
+  cash
+}
+
+// ===============================
+// USER
+// ===============================
+
+model User {
+  id        Int       @id @default(autoincrement())
+  name      String
+  email     String    @unique
+  password  String
+  phone     String?
+  role      UserRole  @default(guest)
+
+  bookings  Booking[]
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+// ===============================
+// HOTEL
+// ===============================
+
+model Hotel {
+  id        Int      @id @default(autoincrement())
+  name      String
+  address   String
+  city      String
+  country   String
+  ratingAvg Decimal  @default(0) @db.Decimal(3,2)
+
+  rooms     Room[]
+  roomTypes RoomType[]
+  bookings  Booking[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([city])
+  @@index([country])
+}
+
+// ===============================
+// ROOM TYPE
+// ===============================
+
+model RoomType {
+  id               Int     @id @default(autoincrement())
+
+  hotel            Hotel   @relation(fields: [hotelId], references: [id], onDelete: Cascade)
+  hotelId          Int
+
+  name             String
+  description      String?
+  capacityAdults   Int
+  capacityChildren Int
+  basePrice        Decimal @db.Decimal(10,2)
+
+  rooms            Room[]
+
+  createdAt        DateTime @default(now())
+
+  @@index([hotelId])
+}
+
+// ===============================
+// ROOM (Inventory Based)
+// ===============================
+
+model Room {
+  id           Int        @id @default(autoincrement())
+
+  hotel        Hotel      @relation(fields: [hotelId], references: [id], onDelete: Cascade)
+  hotelId      Int
+
+  roomType     RoomType   @relation(fields: [roomTypeId], references: [id], onDelete: Cascade)
+  roomTypeId   Int
+
+  roomNumber   String
+  floor        Int
+  status       RoomStatus @default(available)
+
+  bookings     Booking[]
+  availability RoomAvailability[]
+
+  createdAt    DateTime @default(now())
+
+  @@unique([hotelId, roomNumber])   // prevent duplicate room numbers
+  @@index([hotelId])
+  @@index([roomTypeId])
+}
+
+// ===============================
+// ROOM AVAILABILITY
+// ===============================
+
+model RoomAvailability {
+  id            Int      @id @default(autoincrement())
+
+  room          Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  roomId        Int
+
+  date          DateTime
+  isAvailable   Boolean  @default(true)
+  priceOverride Decimal? @db.Decimal(10,2)
+
+  @@unique([roomId, date])   // prevent duplicate date entry
+  @@index([date])
+}
+
+// ===============================
+// BOOKING
+// ===============================
+
+model Booking {
+  id             Int            @id @default(autoincrement())
+
+  user           User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId         Int
+
+  hotel          Hotel          @relation(fields: [hotelId], references: [id], onDelete: Cascade)
+  hotelId        Int
+
+  room           Room           @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  roomId         Int
+
+  checkIn        DateTime
+  checkOut       DateTime
+
+  totalPrice     Decimal        @db.Decimal(10,2)
+  status         BookingStatus  @default(pending)
+
+  guestsAdults   Int
+  guestsChildren Int
+
+  payment        Payment?
+
+  createdAt      DateTime       @default(now())
+
+  @@index([userId])
+  @@index([hotelId])
+  @@index([roomId])
+  @@index([checkIn])
+  @@index([checkOut])
+}
+
+// ===============================
+// PAYMENT (1-to-1)
+// ===============================
+
+model Payment {
+  id            Int           @id @default(autoincrement())
+
+  booking       Booking       @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  bookingId     Int           @unique   // one booking = one payment
+
+  amount        Decimal       @db.Decimal(10,2)
+  currency      String        @default("BDT")
+
+  paymentMethod PaymentMethod
+  paymentStatus PaymentStatus @default(pending)
+
+  transactionId String?
+  paidAt        DateTime?
+
+  createdAt     DateTime      @default(now())
+}
