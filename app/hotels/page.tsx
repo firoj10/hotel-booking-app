@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import HotelCard from "./components/HotelCard";
 import SearchForm from "@/components/forms/SearchForm";
+import FilterInput from "./components/FilterInput";
 
 interface Hotel {
   id: number;
@@ -76,11 +77,21 @@ export default function HotelsPage() {
       ) : hotels.length === 0 ? (
         <p className="mt-6">No hotels found</p>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
-          {hotels.map((hotel) => (
-            <HotelCard key={hotel.id} hotel={hotel} />
-          ))}
-        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-[25%_75%] gap-6 mt-6">
+  
+  {/* Filter - 30% on lg */}
+  <div>
+    <FilterInput />
+  </div>
+
+  {/* Hotels - 70% on lg */}
+  <div className="grid grid-cols-1 gap-6">
+    {hotels.map((hotel) => (
+      <HotelCard key={hotel.id} hotel={hotel} />
+    ))}
+  </div>
+
+</div>
       )}
     </div>
   );

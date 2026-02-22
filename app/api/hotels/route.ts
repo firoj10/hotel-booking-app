@@ -16,9 +16,16 @@ export async function GET(req: NextRequest) {
     if (!city) return NextResponse.json({ success: true, data: [] });
 
     // Fetch hotels by city only first
+    // let hotels = await prisma.hotel.findMany({
+    //   where: { city: { equals: city, mode: "insensitive" } },
+    //   include: { rooms: { include: { roomType: true } } },
+    // });
     let hotels = await prisma.hotel.findMany({
       where: { city: { equals: city, mode: "insensitive" } },
-      include: { rooms: { include: { roomType: true } } },
+      include: {
+        rooms: { include: { roomType: true } },
+        images: true, // ✅ add this line
+      },
     });
 
     // Optional filter: adults, children, rooms

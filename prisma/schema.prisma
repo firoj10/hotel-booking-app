@@ -71,6 +71,8 @@ model User {
 model Hotel {
   id        Int      @id @default(autoincrement())
   name      String
+  hotelDescription String?   // নতুন field
+
   address   String
   city      String
   country   String
@@ -79,6 +81,7 @@ model Hotel {
   rooms     Room[]
   roomTypes RoomType[]
   bookings  Booking[]
+  images    HotelImage[]   // Relation
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -104,6 +107,7 @@ model RoomType {
   basePrice        Decimal @db.Decimal(10,2)
 
   rooms            Room[]
+  images           RoomImage[]   // Relation
 
   createdAt        DateTime @default(now())
 
@@ -211,4 +215,26 @@ model Payment {
   paidAt        DateTime?
 
   createdAt     DateTime      @default(now())
+}
+
+model HotelImage {
+  id      Int    @id @default(autoincrement())
+  hotel   Hotel  @relation(fields: [hotelId], references: [id], onDelete: Cascade)
+  hotelId Int
+  url     String
+  alt     String?    // Optional caption / alt text
+  order   Int?       // Optional, display order
+
+  createdAt DateTime @default(now())
+}
+
+model RoomImage {
+  id         Int      @id @default(autoincrement())
+  roomType   RoomType @relation(fields: [roomTypeId], references: [id], onDelete: Cascade)
+  roomTypeId Int
+  url        String
+  alt        String?    // Optional caption / alt text
+  order      Int?       // Optional, display order
+
+  createdAt DateTime @default(now())
 }
