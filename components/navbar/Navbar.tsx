@@ -1,17 +1,39 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
+import Link from "next/link";
+import { useAuth } from "@/context/AuthContext";
 
 export default function Navbar() {
-    return (
-        <nav className="  bg-white shadow-sm sticky top-0 z-50">
-            <div className="max-w-7xl mx-auto  px-6 flex justify-between items-center p-6">
-                <div className="text-primary font-bold text-xl">BookingClone</div>
-                <div className="flex gap-4">
-                    <Button className="bg-primary text-white">Sign in</Button>
-                    <Button className="bg-accent text-black">Register</Button>
-                </div>
-            </div>
-        </nav>
-    );
+  const { user, logout } = useAuth();
+
+  return (
+    <nav className=" bg-white shadow">
+      <div className="flex justify-between p-4 m max-w-7xl mx-auto" >
+        <Link href="/" className="font-bold text-xl">HotelBooking</Link>
+
+      <div >
+        {user ? (
+          <>
+            <span className="mr-4 font-medium">Hi, {user.name}</span>
+            <button
+              onClick={logout}
+              className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 transition"
+            >
+              Logout
+            </button>
+          </>
+        ) : (
+          <>
+            <Link href="/login" className="mr-4 text-blue-600 hover:underline">
+              Login
+            </Link>
+            <Link href="/register" className="text-green-600 hover:underline">
+              Register
+            </Link>
+          </>
+        )}
+      </div>
+      </div>
+    </nav>
+  );
 }
